@@ -39,6 +39,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private final transient SqlExceptionHelper sqlExceptionHelper;
 
 	private final transient PhysicalConnectionHandlingMode connectionHandlingMode;
+	private final boolean requiresWarningsResetOnClose;
 
 	private transient Connection physicalConnection;
 	private boolean closed;
@@ -50,9 +51,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			JdbcSessionContext jdbcSessionContext,
 			ResourceRegistry resourceRegistry,
 			JdbcServices jdbcServices) {
+		super( resourceRegistry );
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.observer = jdbcSessionContext.getObserver();
-		this.resourceRegistry = resourceRegistry;
 
 		this.connectionHandlingMode = determineConnectionHandlingMode(
 				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
@@ -64,8 +65,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			acquireConnectionIfNeeded();
 		}
 
+		this.requiresWarningsResetOnClose = !jdbcSessionContext.isConnectionWarningsResetCanBeSkippedOnClose();
 		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
-		if ( providerDisablesAutoCommit ) {
+		if ( providerDisablesAutoCommit && log.isDebugEnabled() ) {
 			log.debug(
 					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
 							"enabled when you are certain that the Connections given to Hibernate by the " +
@@ -139,7 +141,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.afterStatement();
 
 		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
-			if ( getResourceRegistry().hasRegisteredResources() ) {
+			if ( this.resourceRegistry.hasRegisteredResources() ) {
 				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
 			}
 			else {
@@ -195,8 +197,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 
 		try {
-			if ( !physicalConnection.isClosed() ) {
-				sqlExceptionHelper.logAndClearWarnings( physicalConnection );
+			if ( !physicalConnection.isClosed()) {
+				sqlExceptionHelper.logAndClearWarnings( physicalConnection, requiresWarningsResetOnClose );
 			}
 			jdbcConnectionAccess.releaseConnection( physicalConnection );
 		}
@@ -206,7 +208,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		finally {
 			observer.jdbcConnectionReleaseEnd();
 			physicalConnection = null;
-			getResourceRegistry().releaseResources();
+			this.resourceRegistry.releaseResources();
 		}
 	}
 
@@ -237,7 +239,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			return null;
 		}
 
-		getResourceRegistry().releaseResources();
+		this.resourceRegistry.releaseResources();
 
 		log.trace( "Closing logical connection" );
 		try {
