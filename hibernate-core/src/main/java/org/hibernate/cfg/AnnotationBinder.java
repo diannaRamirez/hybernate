@@ -146,6 +146,7 @@ import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
+import org.hibernate.cfg.schema.SchemaNamingProviderLocator;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -533,6 +534,9 @@ public final class AnnotationBinder {
 			throw new AnnotationException( "An entity cannot be annotated with both @Entity and @MappedSuperclass: "
 					+ clazzToProcess.getName() );
 		}
+		
+		//notify schema naming resolver for the current processing class
+		SchemaNamingProviderLocator.setCurrentProcessingClass(clazzToProcess);
 
 		if ( clazzToProcess.isAnnotationPresent( Inheritance.class )
 				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
@@ -598,7 +602,11 @@ public final class AnnotationBinder {
 		if ( clazzToProcess.isAnnotationPresent( javax.persistence.Table.class ) ) {
 			tabAnn = clazzToProcess.getAnnotation( javax.persistence.Table.class );
 			table = tabAnn.name();
-			schema = tabAnn.schema();
+
+			//compute dynamic schema name
+			//schema = tabAnn.schema();
+			schema = SchemaNamingProviderLocator.resolveSchemaName(tabAnn.schema(),table);
+
 			catalog = tabAnn.catalog();
 			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
 		}
@@ -836,6 +844,9 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 		entityBinder.processComplementaryTableDefinitions( tabAnn );
+		
+		//clean schema naming resolver for the current processing class
+		SchemaNamingProviderLocator.setCurrentProcessingClass(null);
 	}
 
 	/**
@@ -2518,7 +2529,7 @@ public final class AnnotationBinder {
 		if ( assocTable != null || collectionTable != null ) {
 
 			final String catalog;
-			final String schema;
+			String schema;
 			final String tableName;
 			final UniqueConstraint[] uniqueConstraints;
 			final JoinColumn[] joins;
@@ -2540,6 +2551,8 @@ public final class AnnotationBinder {
 				catalog = assocTable.catalog();
 				schema = assocTable.schema();
 				tableName = assocTable.name();
+				//compute dynamic schema name
+				schema = SchemaNamingProviderLocator.resolveSchemaName(schema, tableName);
 				uniqueConstraints = assocTable.uniqueConstraints();
 				joins = assocTable.joinColumns();
 				inverseJoins = assocTable.inverseJoinColumns();
