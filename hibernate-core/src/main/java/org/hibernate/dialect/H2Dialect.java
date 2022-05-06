@@ -15,6 +15,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.RoundFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
@@ -163,7 +164,7 @@ public class H2Dialect extends Dialect {
 		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSQLFunction( "round", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "round", new RoundFunction( "round" ) );
 		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
 		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
@@ -425,12 +426,12 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean dropConstraints() {
 		// We don't need to drop constraints before dropping tables, that just leads to error
