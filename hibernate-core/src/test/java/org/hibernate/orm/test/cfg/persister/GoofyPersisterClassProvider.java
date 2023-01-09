@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -55,7 +56,9 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.spi.NavigablePath;
@@ -206,7 +209,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public java.util.Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		public AttributeMappingsMap getDeclaredAttributeMappings() {
 			return null;
 		}
 
@@ -357,16 +360,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+		public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
 		}
 
 		@Override
@@ -751,7 +754,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<AttributeMapping> getAttributeMappings() {
+		public AttributeMappingsList getAttributeMappings() {
 			return null;
 		}
 
