@@ -1050,4 +1050,13 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	@Deprecated(since = "6.2")
 	String ENTITY_ID = "id";
 
+	@Deprecated
+	default org.hibernate.persister.entity.Loadable asLoadable() {
+		return null;
+	}
+
+	@Override
+	default EntityPersister asEntityPersister() {
+		return this;
+	}
 }
