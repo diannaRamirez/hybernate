@@ -404,6 +404,14 @@ public class Configuration {
 
 	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Set {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
 	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
 		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
 		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
@@ -411,27 +419,53 @@ public class Configuration {
 		return this;
 	}
 
+	/**
+	 * Set {@value AvailableSettings#HBM2DDL_AUTO}.
+	 *
+	 * @param action the {@link Action}
+	 */
 	public Configuration setSchemaExportAction(Action action) {
 		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
 		return this;
 	}
 
+	/**
+	 * Set {@value AvailableSettings#USER} and {@value AvailableSettings#PASS}.
+	 *
+	 * @param user the user id
+	 * @param pass the password
+	 */
 	public Configuration setCredentials(String user, String pass) {
 		setProperty( AvailableSettings.USER, user );
 		setProperty( AvailableSettings.PASS, pass );
 		return this;
 	}
 
+	/**
+	 * Set {@value AvailableSettings#URL}.
+	 *
+	 * @param url the JDBC URL
+	 */
 	public Configuration setJdbcUrl(String url) {
 		setProperty( AvailableSettings.URL, url );
 		return this;
 	}
 
+	/**
+	 * Set {@value AvailableSettings#DATASOURCE}.
+	 *
+	 * @param jndiName the JNDI name of the datasource
+	 */
 	public Configuration setDatasource(String jndiName) {
 		setProperty( AvailableSettings.DATASOURCE, jndiName );
 		return this;
 	}
 
+	/**
+	 * Set {@value AvailableSettings#JAKARTA_TRANSACTION_TYPE}.
+	 *
+	 * @param transactionType the {@link PersistenceUnitTransactionType}
+	 */
 	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
 		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
