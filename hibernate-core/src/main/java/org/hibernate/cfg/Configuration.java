@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -59,6 +60,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -230,7 +232,7 @@ public class Configuration {
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		interceptor = EmptyInterceptor.INSTANCE;
-		properties = new Properties(  );
+		properties = new Properties();
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
@@ -397,6 +399,41 @@ public class Configuration {
 	public Configuration configure(File configFile) throws HibernateException {
 		standardServiceRegistryBuilder.configure( configFile );
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
+		return this;
+	}
+
+	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		return this;
+	}
+
+	public Configuration setSchemaExportAction(Action action) {
+		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		return this;
+	}
+
+	public Configuration setCredentials(String user, String pass) {
+		setProperty( AvailableSettings.USER, user );
+		setProperty( AvailableSettings.PASS, pass );
+		return this;
+	}
+
+	public Configuration setJdbcUrl(String url) {
+		setProperty( AvailableSettings.URL, url );
+		return this;
+	}
+
+	public Configuration setDatasource(String jndiName) {
+		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		return this;
+	}
+
+	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
+		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
 	}
 
@@ -627,6 +664,20 @@ public class Configuration {
 	}
 
 	/**
+	 * Read metadata from the annotations associated with the given classes.
+	 *
+	 * @param annotatedClasses The classes containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
+		for (Class annotatedClass : annotatedClasses) {
+			addAnnotatedClass( annotatedClass );
+		}
+		return this;
+	}
+
+	/**
 	 * Read package-level metadata.
 	 *
 	 * @param packageName java package name
@@ -637,6 +688,22 @@ public class Configuration {
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
 		metadataSources.addPackage( packageName );
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageNames java package names
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackages(String... packageNames) throws MappingException {
+		for (String packageName : packageNames) {
+			addPackage( packageName );
+		}
 		return this;
 	}
 
