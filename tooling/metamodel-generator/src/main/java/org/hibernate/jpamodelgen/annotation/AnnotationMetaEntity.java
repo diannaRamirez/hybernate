@@ -143,6 +143,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
+	public void mergeInParentMembers(Collection<MetaAttribute> toAdd) {
+		mergeInMembers( toAdd );
+	}
+
 	public final String generateImports() {
 		return importContext.generateImports();
 	}
