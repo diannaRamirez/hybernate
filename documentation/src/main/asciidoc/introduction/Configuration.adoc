@@ -210,20 +210,15 @@ Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an i
 ----
 SessionFactory sessionFactory =
         new Configuration()
-            .addAnnotatedClass(Book.class)
-            .addAnnotatedClass(Author.class)
+            .addAnnotatedClasses(Book.class, Author.class)
             // PostgreSQL
-            .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
+            .setJdbcUrl("jdbc:postgresql://localhost/example")
             // Credentials
-            .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
-            .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
+            .setCredentials(user, password)
             // Automatic schema export
-            .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                         Action.CREATE.getExternalJpaName())
-            // SQL statement logging
-            .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
-            .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())
-            .setProperty(AvailableSettings.HIGHLIGHT_SQL, TRUE.toString())
+            .setSchemaExportAction(Action.CREATE)
+            // SQL statement logging, formatting, highlighting
+            .showSql(true, true, true)
             // Create a new SessionFactory
             .buildSessionFactory();
 ----

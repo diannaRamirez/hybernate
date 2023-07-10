@@ -241,25 +241,23 @@ package org.hibernate.example;
 
 import org.hibernate.cfg.Configuration;
 
-import static java.lang.Boolean.TRUE;
 import static java.lang.System.out;
-import static org.hibernate.cfg.AvailableSettings.*;
 
 public class Main {
+
     public static void main(String[] args) {
-        var sessionFactory = new Configuration()
-                .addAnnotatedClass(Book.class)
-                // use H2 in-memory database
-                .setProperty(URL, "jdbc:h2:mem:db1")
-                .setProperty(USER, "sa")
-                .setProperty(PASS, "")
-                // use Agroal connection pool
-                .setProperty("hibernate.agroal.maxSize", "20")
-                // display SQL in console
-                .setProperty(SHOW_SQL, TRUE.toString())
-                .setProperty(FORMAT_SQL, TRUE.toString())
-                .setProperty(HIGHLIGHT_SQL, TRUE.toString())
-                .buildSessionFactory();
+        var sessionFactory = 
+                new Configuration()
+                    .addAnnotatedClass(Book.class)
+                    // use H2 in-memory database
+                    .setJdbcUrl("jdbc:h2:mem:db1")
+                    .setCredentials("sa", "")
+                    // use Agroal connection pool
+                    .setProperty("hibernate.agroal.maxSize", "20")
+                    // display, format, highlight SQL in console
+                    .showSql(true, true, true)
+                    // create the factory
+                    .buildSessionFactory();
 
         // export the inferred database schema
         sessionFactory.getSchemaManager().exportMappedObjects(true);
@@ -360,6 +358,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTIO
 import static org.hibernate.tool.schema.Action.CREATE;
 
 public class Main {
+
     public static void main(String[] args) {
         var factory = createEntityManagerFactory("example",
                 // export the inferred database schema
@@ -403,6 +402,7 @@ public class Main {
             entityManager.close();
         }
     }
+
 }
 ----
 
