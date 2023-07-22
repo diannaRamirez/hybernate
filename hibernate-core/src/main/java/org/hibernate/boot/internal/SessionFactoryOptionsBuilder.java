@@ -1517,4 +1517,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		return this;
 	}
+
+	public void enableJpaDeleteCompliance(boolean enabled) {
+		mutableJpaCompliance().setDeleteCompliance(enabled);
+	}
 }
