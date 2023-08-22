@@ -76,6 +76,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -108,6 +109,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @see org.hibernate.boot.model.TypeContributions
  */
 @Incubating
+@SuppressWarnings( "nullness" )
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
@@ -241,14 +243,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @deprecated This simply isn't a very sensible place to hang the {@link ServiceRegistry}
 	 */
 	@Deprecated(since = "6.2")
-	public ServiceRegistry getServiceRegistry() {
+	public @Nullable ServiceRegistry getServiceRegistry() {
 		return scope.getServiceRegistry();
 	}
 
 	/**
 	 * Obtain the {@link JpaCompliance} setting.
 	 */
-	public JpaCompliance getJpaCompliance() {
+	public @Nullable JpaCompliance getJpaCompliance() {
 		return scope.getJpaCompliance();
 	}
 
@@ -403,10 +405,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private final TypeConfiguration typeConfiguration;
 
 		private transient MetadataBuildingContext metadataBuildingContext;
-		private transient SessionFactoryImplementor sessionFactory;
+		private transient @Nullable SessionFactoryImplementor sessionFactory;
 
 		private boolean allowExtensionsInCdi;
-		private String sessionFactoryName;
+		private @Nullable String sessionFactoryName;
 		private String sessionFactoryUuid;
 
 		@Override
@@ -474,7 +476,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return metadataBuildingContext;
 		}
 
-		private ServiceRegistry getServiceRegistry() {
+		private @Nullable ServiceRegistry getServiceRegistry() {
 			if ( metadataBuildingContext != null ) {
 				return metadataBuildingContext.getBootstrapContext().getServiceRegistry();
 			}
@@ -484,7 +486,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		private JpaCompliance getJpaCompliance() {
+		private @Nullable JpaCompliance getJpaCompliance() {
 			if ( metadataBuildingContext != null ) {
 				return metadataBuildingContext.getBootstrapContext().getJpaCompliance();
 			}
@@ -494,7 +496,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
+		private void setMetadataBuildingContext(@Nullable MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
 			if ( metadataBuildingContext != null ) {
 				this.allowExtensionsInCdi = metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi();
@@ -537,7 +539,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			this.sessionFactory = factory;
 		}
 
-		private static String getFactoryName(SessionFactoryImplementor factory) {
+		private static @Nullable String getFactoryName(SessionFactoryImplementor factory) {
 			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
 			if ( factoryName == null ) {
 				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
@@ -636,9 +638,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressible<?> resolveArithmeticType(
-			SqmExpressible<?> firstType,
-			SqmExpressible<?> secondType) {
+	public @Nullable SqmExpressible<?> resolveArithmeticType(
+			@Nullable SqmExpressible<?> firstType,
+			@Nullable SqmExpressible<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -670,7 +672,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return secondType;
 	}
 
-	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
+	private static boolean matchesJavaType(@Nullable SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
 		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
 	}
@@ -686,7 +688,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getBasicTypeForJavaType( (Type) javaType );
 	}
 
-	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
+	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Type javaType) {
 		final BasicType<?> existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -702,7 +704,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
+	public <J> @Nullable BasicType<J> standardBasicTypeForJavaType(@Nullable Class<J> javaType) {
 		if ( javaType == null ) {
 			return null;
 		}
@@ -722,8 +724,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return standardBasicTypeForJavaType( (Type) javaType, creator );
 	}
 
-	public <J> BasicType<J> standardBasicTypeForJavaType(
-			Type javaType,
+	public <J> @Nullable BasicType<J> standardBasicTypeForJavaType(
+			@Nullable Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;
@@ -744,7 +746,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
-	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
+	public @Nullable TemporalType getSqlTemporalType(@Nullable SqmExpressible<?> type) {
 		if ( type == null ) {
 			return null;
 		}
@@ -767,11 +769,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
+	public static @Nullable TemporalType getSqlTemporalType(JdbcType descriptor) {
 		return getSqlTemporalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
-	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
+	protected static @Nullable TemporalType getSqlTemporalType(int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
 			case SqlTypes.TIMESTAMP:
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
@@ -792,11 +794,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getSqlIntervalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
-	public static IntervalType getSqlIntervalType(JdbcType descriptor) {
+	public static @Nullable IntervalType getSqlIntervalType(JdbcType descriptor) {
 		return getSqlIntervalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
-	protected static IntervalType getSqlIntervalType(int jdbcTypeCode) {
+	protected static @Nullable IntervalType getSqlIntervalType(int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
 			case SqlTypes.INTERVAL_SECOND:
 				return IntervalType.SECOND;
