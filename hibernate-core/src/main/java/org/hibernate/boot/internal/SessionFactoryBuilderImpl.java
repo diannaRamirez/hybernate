@@ -149,6 +149,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder enableNaturalIdCache(boolean enable) {
+		this.optionsBuilder.enableNaturalIdCache(enable);
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
 		this.optionsBuilder.applyStatelessInterceptor( statelessInterceptorClass );
 		return this;
