@@ -387,7 +387,9 @@ public class SessionImpl
 				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
 			}
 
-			log.trace( "Already closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Already closed" );
+			}
 			return;
 		}
 
@@ -476,17 +478,23 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			}
 			setClosed();
 		}
 	}
 
 	private void managedFlush() {
 		if ( isClosed() && !waitingForAutoClose ) {
-			log.trace( "Skipping auto-flush due to session closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Skipping auto-flush due to session closed" );
+			}
 			return;
 		}
-		log.trace( "Automatically flushing session" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Automatically flushing session" );
+		}
 		doFlush();
 	}
 
@@ -507,7 +515,9 @@ public class SessionImpl
 	}
 
 	private void managedClose() {
-		log.trace( "Automatically closing session" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Automatically closing session" );
+		}
 		closeWithoutOpenChecks();
 	}
 
@@ -1063,7 +1073,9 @@ public class SessionImpl
 			clearedEffectiveGraph = false;
 		}
 		else {
-			log.debug("Clearing effective entity graph for subsequent-select");
+			if (log.isDebugEnabled()) {
+				log.debug("Clearing effective entity graph for subsequent-select");
+			}
 			clearedEffectiveGraph = true;
 			effectiveEntityGraph.clear();
 		}
@@ -1396,9 +1408,13 @@ public class SessionImpl
 	public boolean isDirty() throws HibernateException {
 		checkOpen();
 		pulseTransactionCoordinator();
-		log.debug( "Checking session dirtiness" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Checking session dirtiness" );
+		}
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			log.debug( "Session dirty (scheduled updates and insertions)" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Session dirty (scheduled updates and insertions)" );
+			}
 			return true;
 		}
 		DirtyCheckEvent event = new DirtyCheckEvent( this );
@@ -1973,7 +1989,9 @@ public class SessionImpl
 
 	@Override
 	public void beforeTransactionCompletion() {
-		log.trace( "SessionImpl#beforeTransactionCompletion()" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "SessionImpl#beforeTransactionCompletion()" );
+		}
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		beforeTransactionCompletionEvents();

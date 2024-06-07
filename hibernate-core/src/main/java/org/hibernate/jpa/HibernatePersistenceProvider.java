@@ -49,7 +49,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			}
 			return null;
 		}
 		return builder.build();
@@ -79,7 +81,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			units = PersistenceXmlParser.locatePersistenceUnits( integration );
 		}
 		catch (Exception e) {
-			log.debug( "Unable to locate persistence units", e );
+			if (log.isDebugEnabled()) {
+				log.debug( "Unable to locate persistence units", e );
+			}
 			throw new PersistenceException( "Unable to locate persistence units", e );
 		}
 
@@ -102,13 +106,17 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
-				log.debug( "Excluding from consideration due to name mis-match" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Excluding from consideration due to name mis-match" );
+				}
 				continue;
 			}
 
 			// See if we (Hibernate) are the persistence provider
 			if ( ! ProviderChecker.isProvider( persistenceUnit, properties ) ) {
-				log.debug( "Excluding from consideration due to provider mis-match" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Excluding from consideration due to provider mis-match" );
+				}
 				continue;
 			}
 
@@ -120,7 +128,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			}
 		}
 
-		log.debug( "Found no matching persistence units" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Found no matching persistence units" );
+		}
 		return null;
 	}
 
@@ -158,7 +168,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			}
 			return false;
 		}
 		builder.generateSchema();

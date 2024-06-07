@@ -52,7 +52,9 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void notifySynchronizationsBeforeTransactionCompletion() {
-		log.trace( "SynchronizationRegistryStandardImpl.notifySynchronizationsBeforeTransactionCompletion" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "SynchronizationRegistryStandardImpl.notifySynchronizationsBeforeTransactionCompletion" );
+		}
 
 		if ( synchronizations != null ) {
 			for ( Synchronization synchronization : synchronizations ) {
@@ -100,7 +102,9 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void clearSynchronizations() {
-		log.debug( "Clearing local Synchronizations" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Clearing local Synchronizations" );
+		}
 
 		if ( synchronizations != null ) {
 			synchronizations.clear();
