@@ -335,6 +335,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private JdbcParameter offsetParameter;
 	private JdbcParameter limitParameter;
 	private ForUpdateClause forUpdate;
+	private boolean wrappingStarted;
 
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		this.sessionFactory = sessionFactory;
@@ -7152,15 +7153,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderWrappedParameter(JdbcParameter jdbcParameter) {
 		clauseStack.push( Clause.SELECT );
-
+		this.wrappingStarted = true;
 		try {
 			appendSql( "(select " );
-			visitParameterAsParameter( jdbcParameter );
+			renderCasted( jdbcParameter );
 			appendSql( getFromDualForSelectOnly() );
 			appendSql( ')' );
 		}
 		finally {
 			clauseStack.pop();
+			this.wrappingStarted = false;
 		}
 	}
 
@@ -7179,7 +7181,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode) {
 		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7192,7 +7194,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void withParameterRenderingMode(SqlAstNodeRenderingMode renderingMode, Runnable runnable) {
 		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7376,7 +7378,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( "case" );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
@@ -7404,7 +7406,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
 			Predicate predicate = whenFragment.getPredicate();
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			if ( i != 0 ) {
@@ -7451,12 +7453,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Consumer<Expression> resultRenderer) {
 		appendSql( "case " );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 		}
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && ( original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS || wrappingStarted ) ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
