@@ -5319,7 +5319,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			defaultRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 		}
 		else {
-			defaultRenderingMode = SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+			defaultRenderingMode = getSqlSelectionsDefaultParameterRenderingMode();
 		}
 		if ( needsSelectAliases || referenceStrategy == SelectItemReferenceStrategy.ALIAS && hasSelectAliasInGroupByClause() ) {
 			String separator = NO_SEPARATOR;
@@ -5394,6 +5394,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = COMMA_SEPARATOR;
 			}
 		}
+	}
+
+	protected SqlAstNodeRenderingMode getSqlSelectionsDefaultParameterRenderingMode() {
+		return SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
 	}
 
 	protected void renderVirtualSelections(SelectClause selectClause) {

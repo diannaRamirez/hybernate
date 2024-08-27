@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -66,22 +65,8 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		super.visitSqlSelections( selectClause );
 	}
 
-	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
-		if ( inSelect ) {
-			withParameterRenderingMode(
-					SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS,
-					() -> super.visitCaseSearchedExpression( caseSearchedExpression, inSelect )
-			);
-		}
-		else {
-			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
-		}
-	}
-
-	@Override
-	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+	protected SqlAstNodeRenderingMode getSqlSelectionsDefaultParameterRenderingMode(){
+		return SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 	}
 
 	@Override
