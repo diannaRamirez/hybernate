@@ -42,58 +42,21 @@ import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DomainModel
+@SessionFactory
 public class DateSubclassesUnwrapTest {
-
-	private static final WrapperOptions wrapperOptions = new WrapperOptions() {
-		@Override
-		public SharedSessionContractImplementor getSession() {
-			return null;
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return null;
-		}
-
-		public boolean useStreamForLobBinding() {
-			return false;
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForBoolean() {
-			return 0;
-		}
-
-		public LobCreator getLobCreator() {
-			return NonContextualLobCreator.INSTANCE;
-		}
-
-		@Override
-		public TimeZone getJdbcTimeZone() {
-			return null;
-		}
-
-		private final Dialect dialect = new H2Dialect() {
-			@Override
-			public boolean useConnectionToCreateLob() {
-				return false;
-			}
-		};
-
-		@Override
-		public Dialect getDialect() {
-			return dialect;
-		}
-	};
-
 	@Test
-	void testJdbcTimestampJavaType() {
+	void testJdbcTimestampJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final JdbcTimestampJavaType javaType = JdbcTimestampJavaType.INSTANCE;
 		final Date date = new Date();
 
@@ -104,7 +67,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testJdbcDateJavaType() {
+	void testJdbcDateJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 		final Date date = new Date();
 
@@ -115,7 +79,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testJdbcTimeJavaType() {
+	void testJdbcTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final JdbcTimeJavaType javaType = JdbcTimeJavaType.INSTANCE;
 		final Date date = new Date();
 
@@ -129,7 +94,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testDateJavaType() {
+	void testDateJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final DateJavaType javaType = DateJavaType.INSTANCE;
 		final Date date = new Date();
 
@@ -140,7 +106,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testInstantJavaType() {
+	void testInstantJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final InstantJavaType javaType = InstantJavaType.INSTANCE;
 		final Instant instant = Instant.now();
 
@@ -151,7 +118,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testLocalDateJavaType() {
+	void testLocalDateJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final LocalDateJavaType javaType = LocalDateJavaType.INSTANCE;
 		final LocalDate date = LocalDate.now();
 
@@ -162,7 +130,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testLocalDateTimeJavaType() {
+	void testLocalDateTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final LocalDateTimeJavaType javaType = LocalDateTimeJavaType.INSTANCE;
 		final LocalDateTime dateTime = LocalDateTime.now();
 
@@ -173,7 +142,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testLocalTimeJavaType() {
+	void testLocalTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final LocalTimeJavaType javaType = LocalTimeJavaType.INSTANCE;
 		final LocalTime time = LocalTime.now();
 
@@ -184,7 +154,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testOffsetDateTimeJavaType() {
+	void testOffsetDateTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final OffsetDateTimeJavaType javaType = OffsetDateTimeJavaType.INSTANCE;
 		final OffsetDateTime dateTime = OffsetDateTime.now();
 
@@ -195,7 +166,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testOffsetTimeJavaType() {
+	void testOffsetTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final OffsetTimeJavaType javaType = OffsetTimeJavaType.INSTANCE;
 		final OffsetTime time = OffsetTime.now();
 
@@ -207,7 +179,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testZonedDateTimeJavaType() {
+	void testZonedDateTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final ZonedDateTimeJavaType javaType = ZonedDateTimeJavaType.INSTANCE;
 		final ZonedDateTime dateTime = ZonedDateTime.now();
 
@@ -218,7 +191,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testCalendarDateJavaType() {
+	void testCalendarDateJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final CalendarDateJavaType javaType = CalendarDateJavaType.INSTANCE;
 		final Calendar calendar = Calendar.getInstance();
 
@@ -229,7 +203,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testCalendarJavaType() {
+	void testCalendarJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final CalendarJavaType javaType = CalendarJavaType.INSTANCE;
 		final Calendar calendar = Calendar.getInstance();
 
@@ -240,7 +215,8 @@ public class DateSubclassesUnwrapTest {
 	}
 
 	@Test
-	void testCalendarTimeJavaType() {
+	void testCalendarTimeJavaType(SessionFactoryScope scope) {
+		final WrapperOptions wrapperOptions = scope.getSessionFactory().getWrapperOptions();
 		final CalendarTimeJavaType javaType = CalendarTimeJavaType.INSTANCE;
 		final Calendar calendar = Calendar.getInstance();
 
