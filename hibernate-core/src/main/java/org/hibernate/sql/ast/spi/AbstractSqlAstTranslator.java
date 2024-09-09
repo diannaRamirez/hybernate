@@ -183,6 +183,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
@@ -494,6 +495,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public Set<String> getAffectedTableNames() {
 		return affectedTableNames;
+	}
+
+	@Override
+	public void addAffectedTableName(String tableName) {
+		affectedTableNames.add( tableName );
 	}
 
 	protected Statement getStatement() {
@@ -1227,7 +1233,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitSetAssignment(Assignment assignment) {
-		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Assignable assignable = assignment.getAssignable();
+		if ( assignable instanceof SqmPathInterpretation<?> ) {
+			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+			if ( affectedTableName != null ) {
+				addAffectedTableName( affectedTableName );
+			}
+		}
+		final List<ColumnReference> columnReferences = assignable.getColumnReferences();
 		if ( columnReferences.size() == 1 ) {
 			columnReferences.get( 0 ).appendColumnForWrite( this, null );
 			appendSql( '=' );
@@ -1254,6 +1267,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
+		final Assignable assignable = assignment.getAssignable();
+		if ( assignable instanceof SqmPathInterpretation<?> ) {
+			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+			if ( affectedTableName != null ) {
+				addAffectedTableName( affectedTableName );
+			}
+		}
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 		final Expression valueExpression;
 		if ( columnReferences.size() == 1 ) {

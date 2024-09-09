@@ -977,16 +977,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					targetColumnReferences = pathSqlExpression.getColumnReference().getColumnReferences();
 				}
 				if ( assignmentValueParameter != null ) {
+					final ArrayList<Expression> expressions = new ArrayList<>( targetColumnReferences.size() );
 					consumeSqmParameter(
 							assignmentValueParameter,
 							assignedPathInterpretation.getExpressionType(),
-							(index, jdbcParameter) -> addAssignment(
-									assignments,
-									aggregateColumnAssignmentHandler,
-									targetColumnReferences.get( index ),
-									jdbcParameter
-							)
+							(index, jdbcParameter) -> expressions.add( jdbcParameter )
 					);
+					if ( pathSqlExpression instanceof SqlTuple ) {
+						addAssignment(
+								assignments,
+								aggregateColumnAssignmentHandler,
+								(Assignable) assignedPathInterpretation,
+								targetColumnReferences,
+								new SqlTuple( expressions, assignedPathInterpretation.getExpressionType() )
+						);
+					}
+					else {
+						assert expressions.size() == 1;
+						addAssignment(
+								assignments,
+								aggregateColumnAssignmentHandler,
+								(Assignable) assignedPathInterpretation,
+								targetColumnReferences,
+								expressions.get( 0 )
+						);
+					}
 				}
 				else if ( assignmentValue instanceof SqmLiteralNull<?> ) {
 					for ( ColumnReference columnReference : targetColumnReferences ) {
@@ -994,6 +1009,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								assignments,
 								aggregateColumnAssignmentHandler,
 								columnReference,
+								targetColumnReferences,
 								new QueryLiteral<>( null, (BasicValuedMapping) columnReference.getExpressionType() )
 						);
 					}
@@ -1014,27 +1030,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					assert assignedPathJdbcCount == valueExprJdbcCount;
 
-					if ( valueExpression instanceof SqlTuple ) {
-						final List<? extends Expression> expressions = ( (SqlTuple) valueExpression ).getExpressions();
-						assert targetColumnReferences.size() == expressions.size();
-						for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
-							final ColumnReference columnReference = targetColumnReferences.get( i );
-							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, expressions.get( i ) );
-						}
-					}
-					else if ( valueExpression instanceof EmbeddableValuedPathInterpretation<?> ) {
-						final List<? extends Expression> expressions = ( (EmbeddableValuedPathInterpretation<?>) valueExpression ).getSqlTuple().getExpressions();
-						assert targetColumnReferences.size() == expressions.size();
-						for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
-							final ColumnReference columnReference = targetColumnReferences.get( i );
-							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, expressions.get( i ) );
-						}
-					}
-					else {
-						for ( ColumnReference columnReference : targetColumnReferences ) {
-							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, valueExpression );
-						}
-					}
+					addAssignment(
+							assignments,
+							aggregateColumnAssignmentHandler,
+							(Assignable) assignedPathInterpretation,
+							targetColumnReferences,
+							valueExpression
+					);
 				}
 			}
 			finally {
@@ -1053,12 +1055,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void addAssignment(
 			List<Assignment> assignments,
 			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler,
-			ColumnReference columnReference,
+			Assignable assignable,
+			List<ColumnReference> targetColumnReferences,
 			Expression valueExpression) {
 		if ( aggregateColumnAssignmentHandler != null ) {
-			aggregateColumnAssignmentHandler.addAssignment( assignments.size(), columnReference );
+			for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+				aggregateColumnAssignmentHandler.addAssignment( assignments.size(), targetColumnReference );
+			}
 		}
-		assignments.add( new Assignment( columnReference, valueExpression ) );
+		assignments.add( new Assignment( assignable, valueExpression ) );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
