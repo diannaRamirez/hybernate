@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;

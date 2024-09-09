@@ -50,6 +50,7 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -688,10 +689,10 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			}
 		}
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Expression assignedValue = assignment.getAssignedValue();
 		if ( columnReferences.size() == 1 ) {
 			columnReferences.get( 0 ).appendColumnForWrite( this );
 			appendSql( '=' );
-			final Expression assignedValue = assignment.getAssignedValue();
 			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
 			if ( sqlTuple != null ) {
 				assert sqlTuple.getExpressions().size() == 1;
@@ -701,7 +702,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				assignedValue.accept( this );
 			}
 		}
-		else {
+		else if ( assignedValue instanceof SelectStatement ) {
 			char separator = OPEN_PARENTHESIS;
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
@@ -710,6 +711,19 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			}
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );
+		}
+		else {
+			assert assignedValue instanceof SqlTupleContainer;
+			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			expressions.get( 0 ).accept( this );
+			for ( int i = 1; i < columnReferences.size(); i++ ) {
+				appendSql( ',' );
+				columnReferences.get( i ).appendColumnForWrite( this, null );
+				appendSql( '=' );
+				expressions.get( i ).accept( this );
+			}
 		}
 	}
 }
