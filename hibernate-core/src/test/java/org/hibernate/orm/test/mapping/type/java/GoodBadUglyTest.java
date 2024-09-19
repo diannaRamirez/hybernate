@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.type.java;
 
 import java.sql.Time;
@@ -43,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = GoodBadUglyTest.Times.class)
 @SessionFactory
 @SkipForDialect(dialectClass = InformixDialect.class)
-@Disabled
 public class GoodBadUglyTest {
 
 	@BeforeEach

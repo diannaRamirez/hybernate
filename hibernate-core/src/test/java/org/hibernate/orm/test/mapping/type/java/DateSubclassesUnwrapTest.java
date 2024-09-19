@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
 
@@ -17,15 +15,8 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.CalendarDateJavaType;
 import org.hibernate.type.descriptor.java.CalendarJavaType;
@@ -173,7 +164,7 @@ public class DateSubclassesUnwrapTest {
 
 		assertInstanceOf( Timestamp.class, javaType.unwrap( time, Timestamp.class, wrapperOptions ) );
 		assertThrows( IllegalArgumentException.class,
-					  () -> javaType.unwrap( time, java.sql.Date.class, wrapperOptions ) );
+					() -> javaType.unwrap( time, java.sql.Date.class, wrapperOptions ) );
 		assertInstanceOf( Time.class, javaType.unwrap( time, Time.class, wrapperOptions ) );
 		assertInstanceOf( Date.class, javaType.unwrap( time, Date.class, wrapperOptions ) );
 	}
