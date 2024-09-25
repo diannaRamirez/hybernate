@@ -19,6 +19,8 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
@@ -97,7 +99,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -265,7 +266,6 @@ public class H2LegacyDialect extends Dialect {
 			}
 			if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 		}
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
@@ -296,10 +296,15 @@ public class H2LegacyDialect extends Dialect {
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -427,6 +432,8 @@ public class H2LegacyDialect extends Dialect {
 		else {
 			functionFactory.listagg_groupConcat();
 		}
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
 	}
 
 	/**

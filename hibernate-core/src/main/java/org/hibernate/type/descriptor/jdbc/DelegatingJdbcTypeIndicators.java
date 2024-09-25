@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -88,12 +87,6 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	@Override
 	public int getColumnScale() {
 		return delegate.getColumnScale();
-	}
-
-	@Override
-	@Incubating
-	public Integer getExplicitJdbcTypeCode() {
-		return delegate.getExplicitJdbcTypeCode();
 	}
 
 	@Override

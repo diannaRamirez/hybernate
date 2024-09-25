@@ -85,8 +85,11 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -790,17 +793,38 @@ public class MetadataBuildingProcess {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		}
 
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.JSON_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.JSON ).getDdlTypeCode() == SqlTypes.JSON ) {
+				jdbcTypeRegistry.addTypeConstructor( JsonArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( JsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.XML_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML ).getDdlTypeCode() == SqlTypes.SQLXML ) {
+				jdbcTypeRegistry.addTypeConstructor( XmlArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( XmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+
 		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );
-		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
+		if ( preferredSqlTypeCodeForArray == SqlTypes.ARRAY ) {
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
+		}
+		else if ( preferredSqlTypeCodeForArray != SqlTypes.XML_ARRAY
+				&& preferredSqlTypeCodeForArray != SqlTypes.JSON_ARRAY ) {
+			// Don't register a fallback since we will use type constructors
 			adaptToPreferredSqlTypeCode(
 					jdbcTypeRegistry,
 					dialectArrayDescriptor,
 					SqlTypes.ARRAY,
 					preferredSqlTypeCodeForArray
 			);
-		}
-		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
@@ -822,10 +846,6 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOGRAPHY, SqlTypes.GEOMETRY );
-
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonArrayAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_BLOB, SqlTypes.BLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );

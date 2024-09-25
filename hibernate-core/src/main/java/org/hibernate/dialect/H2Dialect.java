@@ -18,6 +18,8 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
@@ -89,7 +91,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -229,7 +230,6 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
@@ -246,9 +246,14 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -358,6 +363,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.xmlforest_h2();
 		functionFactory.xmlconcat_h2();
 		functionFactory.xmlpi_h2();
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
 	}
 
 	/**

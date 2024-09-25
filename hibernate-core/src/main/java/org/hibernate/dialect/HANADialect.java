@@ -66,6 +66,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHA
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -413,6 +414,12 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Prefer XML since JSON was only added later
+		return getVersion().isSameOrAfter( 2 ) ? SqlTypes.XML_ARRAY : super.getPreferredSqlTypeCodeForArray();
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -489,18 +496,28 @@ public class HANADialect extends Dialect {
 				typeConfiguration
 		);
 
-		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
-			// Introduced in 2.0 SPS 02
+		if ( getVersion().isSameOrAfter(2, 0) ) {
+			// Introduced in 2.0 SPS 00
 			functionFactory.jsonValue_no_passing();
 			functionFactory.jsonQuery_no_passing();
 			functionFactory.jsonExists_hana();
-			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
-				// Introduced in 2.0 SPS 04
-				functionFactory.jsonObject_hana();
-				functionFactory.jsonArray_hana();
-				functionFactory.jsonArrayAgg_hana();
-				functionFactory.jsonObjectAgg_hana();
+
+			functionFactory.unnest_hana();
+//			functionFactory.json_table();
+
+			if ( getVersion().isSameOrAfter(2, 0, 20 ) ) {
+				if ( getVersion().isSameOrAfter( 2, 0, 40 ) ) {
+					// Introduced in 2.0 SPS 04
+					functionFactory.jsonObject_hana();
+					functionFactory.jsonArray_hana();
+					functionFactory.jsonArrayAgg_hana();
+					functionFactory.jsonObjectAgg_hana();
+				}
+
+//				functionFactory.xmltable();
 			}
+
+//			functionFactory.xmlextract();
 		}
 	}
 

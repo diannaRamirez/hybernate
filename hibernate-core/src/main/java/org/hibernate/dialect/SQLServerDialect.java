@@ -116,6 +116,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -265,6 +266,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uniqueidentifier", this ) );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
 	}
 
 	@Override
@@ -439,6 +445,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.xmlquery_sqlserver();
 		functionFactory.xmlexists_sqlserver();
 		functionFactory.xmlagg_sqlserver();
+
+		functionFactory.unnest_sqlserver();
+
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
