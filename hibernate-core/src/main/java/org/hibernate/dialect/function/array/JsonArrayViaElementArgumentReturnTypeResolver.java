@@ -18,7 +18,6 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -87,10 +86,6 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		final JdbcTypeIndicators jdbcTypeIndicators = new DelegatingJdbcTypeIndicators( typeConfiguration.getCurrentBaseSqlTypeIndicators() ) {
-			@Override
-			public Integer getExplicitJdbcTypeCode() {
-				return SqlTypes.JSON;
-			}
 		};
 		return arrayJavaType.resolveType(
 				typeConfiguration,

@@ -245,6 +245,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -421,6 +426,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.xmlquery_sqlserver();
 		functionFactory.xmlexists_sqlserver();
 		functionFactory.xmlagg_sqlserver();
+
+		functionFactory.unnest_sqlserver();
+
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );

@@ -320,7 +320,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		append( '(' );
 		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

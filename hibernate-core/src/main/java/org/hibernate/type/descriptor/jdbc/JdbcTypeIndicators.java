@@ -7,7 +7,6 @@ package org.hibernate.type.descriptor.jdbc;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
@@ -139,6 +138,27 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use,
+	 * given the element SQL type code?
+	 * <p>
+	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
+	 *
+	 * @since 7.0
+	 */
+	default int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		final JdbcTypeIndicators indicators = getCurrentBaseSqlTypeIndicators();
+		return resolveJdbcTypeCode(
+				switch ( elementSqlTypeCode ) {
+					case SqlTypes.JSON -> SqlTypes.JSON_ARRAY;
+					case SqlTypes.SQLXML -> SqlTypes.XML_ARRAY;
+					default -> indicators.getPreferredSqlTypeCodeForArray();
+				}
+		);
+	}
+
+	/**
 	 * Useful for resolutions based on column length.
 	 * <p>
 	 * E.g. for choosing between a {@code VARCHAR} ({@code String}) and {@code CHAR(1)} ({@code Character}/{@code char}).
@@ -161,17 +181,6 @@ public interface JdbcTypeIndicators {
 	 */
 	default int getColumnScale() {
 		return NO_COLUMN_SCALE;
-	}
-
-	/**
-	 * Used (for now) only to choose a container {@link JdbcType} for
-	 * SQL arrays.
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	default Integer getExplicitJdbcTypeCode() {
-		return getPreferredSqlTypeCodeForArray();
 	}
 
 	/**

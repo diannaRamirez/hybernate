@@ -31,6 +31,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
@@ -38,6 +39,9 @@ import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
@@ -54,6 +58,43 @@ public class JsonHelper {
 		}
 		final StringBuilder sb = new StringBuilder();
 		toString( embeddableMappingType, value, options, new JsonAppender( sb ) );
+		return sb.toString();
+	}
+
+	public static String arrayToString(MappingType elementMappingType, Object[] values, WrapperOptions options) {
+		if ( values.length == 0 ) {
+			return "[]";
+		}
+		final StringBuilder sb = new StringBuilder();
+		final JsonAppender jsonAppender = new JsonAppender( sb );
+		char separator = '[';
+		for ( Object value : values ) {
+			sb.append( separator );
+			toString( elementMappingType, value, options, jsonAppender );
+			separator = ',';
+		}
+		sb.append( ']' );
+		return sb.toString();
+	}
+
+	public static String arrayToString(
+			JavaType<?> elementJavaType,
+			JdbcType elementJdbcType,
+			Object[] values,
+			WrapperOptions options) {
+		if ( values.length == 0 ) {
+			return "[]";
+		}
+		final StringBuilder sb = new StringBuilder();
+		final JsonAppender jsonAppender = new JsonAppender( sb );
+		char separator = '[';
+		for ( Object value : values ) {
+			sb.append( separator );
+			//noinspection unchecked
+			convertedValueToString( (JavaType<Object>) elementJavaType, elementJdbcType, value, options, jsonAppender );
+			separator = ',';
+		}
+		sb.append( ']' );
 		return sb.toString();
 	}
 
@@ -130,25 +171,22 @@ public class JsonHelper {
 	}
 
 	private static void convertedValueToString(
-			MappingType mappedType,
+			JavaType<Object> javaType,
+			JdbcType jdbcType,
 			Object value,
 			WrapperOptions options,
 			JsonAppender appender) {
 		if ( value == null ) {
 			appender.append( "null" );
 		}
-		else if ( mappedType instanceof EmbeddableMappingType ) {
-			toString( (EmbeddableMappingType) mappedType, value, options, appender );
-		}
-		else if ( mappedType instanceof BasicType<?> ) {
-			//noinspection unchecked
-			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
-			convertedBasicValueToString( value, options, appender, basicType );
+		else if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+			toString( aggregateJdbcType.getEmbeddableMappingType(), value, options, appender );
 		}
 		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+			convertedBasicValueToString( value, options, appender, javaType, jdbcType );
 		}
 	}
+
 
 	private static void convertedBasicValueToString(
 			Object value,
@@ -156,8 +194,22 @@ public class JsonHelper {
 			JsonAppender appender,
 			BasicType<Object> basicType) {
 		//noinspection unchecked
-		final JavaType<Object> javaType = (JavaType<Object>) basicType.getJdbcJavaType();
-		switch ( basicType.getJdbcType().getDefaultSqlTypeCode() ) {
+		convertedBasicValueToString(
+				value,
+				options,
+				appender,
+				(JavaType<Object>) basicType.getJdbcJavaType(),
+				basicType.getJdbcType()
+		);
+	}
+
+	private static void convertedBasicValueToString(
+			Object value,
+			WrapperOptions options,
+			JsonAppender appender,
+			JavaType<Object> javaType,
+			JdbcType jdbcType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
@@ -272,19 +324,21 @@ public class JsonHelper {
 				final int length = Array.getLength( value );
 				appender.append( '[' );
 				if ( length != 0 ) {
-					final BasicType<Object> elementType = ( (BasicPluralType<?, Object>) basicType ).getElementType();
+					//noinspection unchecked
+					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) javaType ).getElementJavaType();
+					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
 					Object arrayElement = Array.get( value, 0 );
-					convertedValueToString( elementType, arrayElement, options, appender );
+					convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					for ( int i = 1; i < length; i++ ) {
 						arrayElement = Array.get( value, i );
 						appender.append( ',' );
-						convertedValueToString( elementType, arrayElement, options, appender );
+						convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					}
 				}
 				appender.append( ']' );
 				break;
 			default:
-				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + basicType.getJdbcType() );
+				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
 		}
 	}
 
@@ -312,6 +366,38 @@ public class JsonHelper {
 		}
 		//noinspection unchecked
 		return (X) values;
+	}
+
+	public static Collection<Object> arrayFromString(
+			BasicPluralJavaType<?> javaType,
+			JsonArrayJdbcType jsonArrayJdbcType,
+			String string,
+			WrapperOptions options) {
+		if ( string == null ) {
+			return null;
+		}
+		throw new UnsupportedOperationException();
+//		final CustomArrayList arrayList = new CustomArrayList();
+//		int i = fromArrayString( string, false, options, 0, arrayList, elementType ) - 1;
+//		assert string.charAt( i ) == ']';
+//		return arrayList;
+//
+//		if ( getElementJdbcType() instanceof AggregateJdbcType ) {
+//			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) getElementJdbcType();
+//			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+//			final Object rawArray = array.getArray();
+//			final Object[] domainObjects = new Object[Array.getLength( rawArray )];
+//			for ( int i = 0; i < domainObjects.length; i++ ) {
+//				final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( Array.get( rawArray, i ), options );
+//				final StructAttributeValues attributeValues =
+//						StructHelper.getAttributeValues( embeddableMappingType, aggregateRawValues, options );
+//				domainObjects[i] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+//			}
+//			return extractor.getJavaType().wrap( domainObjects, options );
+//		}
+//		else {
+//			return extractor.getJavaType().wrap( array, options );
+//		}
 	}
 
 	private static int fromString(

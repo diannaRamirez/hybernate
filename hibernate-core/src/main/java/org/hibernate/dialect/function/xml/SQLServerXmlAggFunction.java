@@ -119,6 +119,7 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 									),
 									alias,
 									List.of("v"),
+									Set.of(),
 									true,
 									true,
 									null
